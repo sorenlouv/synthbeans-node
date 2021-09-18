@@ -5,5 +5,6 @@ export type Transaction = {
 };
 
 export type Config = {
+  lookbackInMinutes: number;
   transactions: Record<string, Transaction>;
 };

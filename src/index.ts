@@ -10,30 +10,20 @@ function getTimestampNowRounded() {
 }
 
 function init() {
-  const totalDurationInMinutes = 15;
   const endTime = getTimestampNowRounded();
-  const startTime = endTime - totalDurationInMinutes * 1000 * 60;
-
-  console.log(`Start time: ${new Date(startTime)}`);
-  console.log(`End time: ${new Date(endTime)}`);
+  const totalDurationInMillis = config.lookbackInMinutes * 1000 * 60;
+  const startTime = endTime - totalDurationInMillis;
 
   Object.entries(config.transactions).forEach(
     ([transactionName, transaction]) => {
       const totalRequestCount =
-        transaction.transaction_rate_tpm * totalDurationInMinutes;
-      const timeBetweenTransactions =
-        (60 / transaction.transaction_rate_tpm) * 1000;
-
-      console.log({ totalRequestCount });
-      console.log({ timeBetweenTransactions });
+        transaction.transaction_rate_tpm * config.lookbackInMinutes;
+      const msPerRequest = totalDurationInMillis / totalRequestCount;
 
       Array.from(Array(totalRequestCount)).forEach((_, i) => {
-        const transactionStartTime = startTime + timeBetweenTransactions * i;
-        console.log(transactionStartTime);
-
         createTransaction({
           ...transaction,
-          startTime: transactionStartTime,
+          startTime: startTime + msPerRequest * i,
           name: transactionName,
         });
       });
@@ -52,9 +42,15 @@ function createTransaction(
   const { startTime } = transaction;
   const t = apm.startTransaction(transaction.name, { startTime });
 
-  apm.captureError(new Error('Boom!'), {
-    timestamp: startTime + transaction.duration / 2,
-  });
+  apm.captureError(
+    new Error('Boom!'),
+    {
+      timestamp: startTime + transaction.duration / 2,
+    },
+    (a, b) => {
+      console.log(a, b);
+    }
+  );
 
   const isFailureOutcome = Math.random() <= transaction.failed_transaction_rate;
   const outcome = isFailureOutcome ? 'failure' : 'success';

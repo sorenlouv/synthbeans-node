@@ -1,6 +1,7 @@
 import { Config } from '../src/typings';
 
 const config: Config = {
+  lookbackInMinutes: 15,
   transactions: {
     historical7: {
       duration: 1000,
