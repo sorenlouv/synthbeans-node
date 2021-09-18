@@ -3,4 +3,4 @@
 .DS_Store
 /.env
 *.log
-/config/elastic-apm-node.js
+*elastic-apm-node.js
