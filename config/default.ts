@@ -1,3 +1,5 @@
+import { Config } from '../src/typings';
+
 const config: Config = {
   transactions: {
     historical7: {
@@ -9,13 +11,3 @@ const config: Config = {
 };
 
 export default config;
-
-export type Transaction = {
-  duration: number;
-  transaction_rate_tpm: number;
-  failed_transaction_rate: number;
-};
-
-type Config = {
-  transactions: Record<string, Transaction>;
-};

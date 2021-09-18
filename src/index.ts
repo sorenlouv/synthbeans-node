@@ -1,5 +1,6 @@
-import config, { Transaction } from '../config/default';
 import apmNode from 'elastic-apm-node';
+import config from '../config/default';
+import { Transaction } from './typings';
 
 const apm = apmNode.start({ serviceNodeName: 'foo' });
 
@@ -38,30 +39,30 @@ function init() {
       });
     }
   );
-
-  function createTransaction(
-    transaction: Transaction & {
-      name: string;
-      startTime: number;
-    }
-  ) {
-    const t = apm.startTransaction(transaction.name, { startTime });
-
-    apm.captureError(new Error('Boom!'), {
-      timestamp: startTime + transaction.duration / 2,
-    });
-
-    const isFailureOutcome =
-      Math.random() <= transaction.failed_transaction_rate;
-    const outcome = isFailureOutcome ? 'failure' : 'success';
-    t?.setOutcome(outcome);
-
-    //@ts-expect-error
-    const span = t.startSpan('SELECT *', 'db.mysql', { startTime });
-
-    span?.end(startTime + transaction.duration);
-    t?.end(outcome, startTime + transaction.duration);
-  }
 }
 
 init();
+
+function createTransaction(
+  transaction: Transaction & {
+    name: string;
+    startTime: number;
+  }
+) {
+  const { startTime } = transaction;
+  const t = apm.startTransaction(transaction.name, { startTime });
+
+  apm.captureError(new Error('Boom!'), {
+    timestamp: startTime + transaction.duration / 2,
+  });
+
+  const isFailureOutcome = Math.random() <= transaction.failed_transaction_rate;
+  const outcome = isFailureOutcome ? 'failure' : 'success';
+  t?.setOutcome(outcome);
+
+  //@ts-expect-error
+  const span = t.startSpan('SELECT *', 'db.mysql', { startTime });
+
+  span?.end(startTime + transaction.duration);
+  t?.end(outcome, startTime + transaction.duration);
+}
