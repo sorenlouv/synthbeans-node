@@ -1,10 +1,12 @@
-export type Transaction = {
+export type ConfigTransaction = {
+  name: string;
   duration: number;
-  transaction_rate_tpm: number;
-  failed_transaction_rate: number;
+  transactionRateTpm: number;
+  failedTransactionRate: number;
 };
 
 export type Config = {
   lookbackInMinutes: number;
-  transactions: Record<string, Transaction>;
+  instanceCount: number;
+  transactions: ConfigTransaction[];
 };

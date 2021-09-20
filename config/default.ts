@@ -1,14 +1,16 @@
 import { Config } from '../src/typings';
 
 const config: Config = {
-  lookbackInMinutes: 15,
-  transactions: {
-    historical7: {
+  lookbackInMinutes: 60,
+  instanceCount: 5,
+  transactions: [
+    {
+      name: 'historical7',
       duration: 1000,
-      transaction_rate_tpm: 60,
-      failed_transaction_rate: 0.5,
+      transactionRateTpm: 60,
+      failedTransactionRate: 0.5,
     },
-  },
+  ],
 };
 
 export default config;
