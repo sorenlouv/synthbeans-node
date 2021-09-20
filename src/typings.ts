@@ -6,7 +6,7 @@ export type ConfigTransaction = {
 };
 
 export type Config = {
-  lookbackInMinutes: number;
+  lookbackDurationInMinutes: number;
   instanceCount: number;
   transactions: ConfigTransaction[];
 };

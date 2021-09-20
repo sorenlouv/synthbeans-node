@@ -5,32 +5,36 @@ import { ConfigTransaction } from './typings';
 import { getWorkerEnvironment } from './worker_environment';
 
 export function generateApmData() {
-  const { instanceId, currentTime } = getWorkerEnvironment();
+  const { instanceId, lookbackStartTime } = getWorkerEnvironment();
   const apm = apmNode.start({
     serviceNodeName: `instance-${instanceId}`,
     serviceName: 'my service',
   });
 
-  const totalDurationInMillis = config.lookbackInMinutes * 1000 * 60;
-  const startTime = currentTime - totalDurationInMillis;
+  const lookbackDurationInMillis = config.lookbackDurationInMinutes * 1000 * 60;
 
   config.transactions.forEach((transaction) => {
+    const throughputPerInstance =
+      transaction.transactionRateTpm / config.instanceCount;
+
     const totalRequestCount =
-      (transaction.transactionRateTpm / config.instanceCount) *
-      config.lookbackInMinutes;
-    const msPerRequest = totalDurationInMillis / totalRequestCount;
+      throughputPerInstance * config.lookbackDurationInMinutes;
+    const msPerRequest = lookbackDurationInMillis / totalRequestCount;
 
     // console.log(
-    //   `${totalRequestCount} requests/instance for ${config.lookbackInMinutes} minutes (${transaction.transactionRateTpm} tpm)`
+    //   `${totalRequestCount} requests/instance for ${config.lookbackDurationInMinutes} minutes (${transaction.transactionRateTpm} tpm)`
     // );
 
+    // generate historical data
     times(totalRequestCount, (i) => {
-      createTransaction({
-        apm,
-        transaction,
-        startTime: startTime + msPerRequest * i,
-      });
+      const startTime = lookbackStartTime + msPerRequest * i;
+      createTransaction({ apm, transaction, startTime });
     });
+
+    // generate concurrent data
+    setInterval(() => {
+      createTransaction({ apm, transaction, startTime: Date.now() });
+    }, (60 / throughputPerInstance) * 1000);
   });
 }
 

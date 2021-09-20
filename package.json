@@ -24,9 +24,6 @@
     "dist",
     "yarn.lock"
   ],
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "devDependencies": {
     "@types/core-js": "^2.5.5",
     "@types/jest": "^27.0.1",

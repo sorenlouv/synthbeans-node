@@ -1,8 +1,8 @@
 import { Config } from '../src/typings';
 
 const config: Config = {
-  lookbackInMinutes: 60,
-  instanceCount: 5,
+  lookbackDurationInMinutes: 60,
+  instanceCount: 10,
   transactions: [
     {
       name: 'historical7',
