@@ -3,6 +3,10 @@ export type ConfigTransaction = {
   duration: number;
   transactionRateTpm: number;
   failedTransactionRate: number;
+  spans?: Array<{
+    type: 'elasticsearch' | 'postgres';
+    duration: number;
+  }>;
 };
 
 export type Config = {

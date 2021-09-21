@@ -25,7 +25,7 @@ if (cluster.isPrimary) {
   try {
     generateApmData();
   } catch (e) {
-    console.log('error', e);
+    console.error('Synthbeans encountered an error', e);
   }
 }
 
