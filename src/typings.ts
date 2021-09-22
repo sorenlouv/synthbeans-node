@@ -12,5 +12,6 @@ export type ConfigTransaction = {
 export type Config = {
   lookbackDurationInMinutes: number;
   instanceCount: number;
+  serviceName: string;
   transactions: ConfigTransaction[];
 };

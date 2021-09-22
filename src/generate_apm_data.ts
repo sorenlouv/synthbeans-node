@@ -8,7 +8,7 @@ export function generateApmData() {
   const { instanceId, lookbackStartTime } = getWorkerEnvironment();
   const apm = apmNode.start({
     serviceNodeName: `instance-${instanceId}`,
-    serviceName: 'My New Service',
+    serviceName: config.serviceName,
     metricsInterval: '1s',
     stackTraceLimit: 1,
     captureSpanStackTraces: false,
