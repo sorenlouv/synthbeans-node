@@ -1,7 +1,7 @@
 import { Config } from '../src/typings';
 
 const config: Config = {
-  lookbackDurationInMinutes: 60 * 2,
+  lookbackDurationInMinutes: 60,
   instanceCount: 2,
   transactions: [
     {
