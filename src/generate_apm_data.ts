@@ -9,7 +9,7 @@ export function generateApmData() {
   const apm = apmNode.start({
     serviceNodeName: `instance-${instanceId}`,
     serviceName: 'My New Service',
-    metricsInterval: '0s',
+    metricsInterval: '10s',
     stackTraceLimit: 1,
     captureSpanStackTraces: false,
     maxQueueSize: 10000000,
@@ -29,7 +29,7 @@ export function generateApmData() {
     times(totalRequestCount).reduce<Promise<unknown>>(async (p, i) => {
       const startTime = lookbackStartTime + msPerRequest * i;
       await p;
-      await sleep(10);
+      await sleep(5);
       createTransaction({ apm, transaction, startTime });
     }, Promise.resolve());
 
@@ -53,7 +53,9 @@ function createTransaction({
   transaction: ConfigTransaction;
   startTime: number;
 }) {
-  const t = apm.startTransaction(transaction.name, { startTime });
+  const t = apm.startTransaction(transaction.name, 'my-type', {
+    startTime,
+  });
 
   if (!t) {
     return;
@@ -67,7 +69,7 @@ function createTransaction({
   t.setOutcome(outcome);
 
   //@ts-expect-error
-  const s = t.startSpan('My span', 'app', 'bar', { startTime });
+  const s = t.startSpan('My span', 'app', 'foobar', { startTime });
   s?.setOutcome(outcome);
   s?.end(startTime + transaction.duration);
 
