@@ -9,7 +9,7 @@ export function generateApmData() {
   const apm = apmNode.start({
     serviceNodeName: `instance-${instanceId}`,
     serviceName: 'My New Service',
-    metricsInterval: '10s',
+    metricsInterval: '1s',
     stackTraceLimit: 1,
     captureSpanStackTraces: false,
     maxQueueSize: 10000000,
@@ -18,6 +18,8 @@ export function generateApmData() {
   const lookbackDurationInMillis = config.lookbackDurationInMinutes * 1000 * 60;
 
   config.transactions.forEach((transaction) => {
+    const outcomeCount = { failure: 0, success: 0 };
+
     const throughputPerInstance =
       transaction.transactionRateTpm / config.instanceCount;
 
@@ -25,18 +27,23 @@ export function generateApmData() {
       throughputPerInstance * config.lookbackDurationInMinutes;
     const msPerRequest = lookbackDurationInMillis / totalRequestCount;
 
+    // generate concurrent data
+    setInterval(() => {
+      createTransaction({
+        apm,
+        transaction,
+        startTime: Date.now(),
+        outcomeCount,
+      });
+    }, (60 / throughputPerInstance) * 1000);
+
     // generate historical data
     times(totalRequestCount).reduce<Promise<unknown>>(async (p, i) => {
       const startTime = lookbackStartTime + msPerRequest * i;
       await p;
       await sleep(5);
-      createTransaction({ apm, transaction, startTime });
+      createTransaction({ apm, transaction, startTime, outcomeCount });
     }, Promise.resolve());
-
-    // generate concurrent data
-    setInterval(() => {
-      createTransaction({ apm, transaction, startTime: Date.now() });
-    }, (60 / throughputPerInstance) * 1000);
   });
 }
 
@@ -48,10 +55,12 @@ function createTransaction({
   apm,
   transaction,
   startTime,
+  outcomeCount,
 }: {
   apm: apmNode.Agent;
   transaction: ConfigTransaction;
   startTime: number;
+  outcomeCount: { failure: number; success: number };
 }) {
   const t = apm.startTransaction(transaction.name, 'my-type', {
     startTime,
@@ -61,12 +70,20 @@ function createTransaction({
     return;
   }
 
-  const errorTimestamp = startTime + transaction.duration / 2;
-  apm.captureError(new Error('Boom!'), { timestamp: errorTimestamp });
-
-  const isFailureOutcome = Math.random() <= transaction.failedTransactionRate;
-  const outcome = isFailureOutcome ? 'failure' : 'success';
+  const actualFailureRate =
+    outcomeCount.failure / (outcomeCount.failure + outcomeCount.success);
+  const outcome =
+    actualFailureRate > transaction.failedTransactionRate
+      ? 'success'
+      : 'failure';
+  outcomeCount[outcome]++;
   t.setOutcome(outcome);
+
+  const errorTimestamp = startTime + transaction.duration / 2;
+
+  if (outcome === 'failure') {
+    apm.captureError(new Error('Boom!'), { timestamp: errorTimestamp });
+  }
 
   //@ts-expect-error
   const s = t.startSpan('My span', 'app', 'foobar', { startTime });
