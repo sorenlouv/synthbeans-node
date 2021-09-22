@@ -20,6 +20,18 @@ export function generateApmData() {
   config.transactions.forEach((transaction) => {
     const outcomeCount = { failure: 0, success: 0 };
 
+    function generateOutcome() {
+      const expectedFailureRate = transaction.failedTransactionRate;
+      const actualFailureRate =
+        outcomeCount.failure / (outcomeCount.failure + outcomeCount.success);
+
+      const outcome =
+        actualFailureRate > expectedFailureRate ? 'success' : 'failure';
+      outcomeCount[outcome]++;
+
+      return outcome;
+    }
+
     const throughputPerInstance =
       transaction.transactionRateTpm / config.instanceCount;
 
@@ -33,7 +45,7 @@ export function generateApmData() {
         apm,
         transaction,
         startTime: Date.now(),
-        outcomeCount,
+        generateOutcome,
       });
     }, (60 / throughputPerInstance) * 1000);
 
@@ -42,7 +54,7 @@ export function generateApmData() {
       const startTime = lookbackStartTime + msPerRequest * i;
       await p;
       await sleep(5);
-      createTransaction({ apm, transaction, startTime, outcomeCount });
+      createTransaction({ apm, transaction, startTime, generateOutcome });
     }, Promise.resolve());
   });
 }
@@ -55,12 +67,12 @@ function createTransaction({
   apm,
   transaction,
   startTime,
-  outcomeCount,
+  generateOutcome,
 }: {
   apm: apmNode.Agent;
   transaction: ConfigTransaction;
   startTime: number;
-  outcomeCount: { failure: number; success: number };
+  generateOutcome: () => 'success' | 'failure';
 }) {
   const t = apm.startTransaction(transaction.name, 'my-type', {
     startTime,
@@ -70,13 +82,7 @@ function createTransaction({
     return;
   }
 
-  const actualFailureRate =
-    outcomeCount.failure / (outcomeCount.failure + outcomeCount.success);
-  const outcome =
-    actualFailureRate > transaction.failedTransactionRate
-      ? 'success'
-      : 'failure';
-  outcomeCount[outcome]++;
+  const outcome = generateOutcome();
   t.setOutcome(outcome);
 
   const errorTimestamp = startTime + transaction.duration / 2;
