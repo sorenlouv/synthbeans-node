@@ -39,3 +39,6 @@ Two transaction groups:
 
 ![image](https://user-images.githubusercontent.com/209966/134345062-d49d0872-8dd5-4623-9af8-0403c344fbd0.png)
 
+## Credits
+
+Heavily inspired by [synthbeans-python](https://github.com/elastic/synthbeans-python)
