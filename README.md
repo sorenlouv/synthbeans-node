@@ -1,5 +1,7 @@
 # synthbeans-node
 
+A tool to generate predictable APM data making it easier to spot calculation errors in APM ui. 
+
 **Install dependencies**
 
 ```
